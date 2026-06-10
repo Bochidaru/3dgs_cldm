@@ -862,8 +862,10 @@ def training(
         import json
         from pathlib import Path
 
+        split_train_view=getattr(args, "split_train_views", False)
+
         original_dataset_path = Path(dataset.source_path_original)
-        dataset_tag = original_dataset_path.name
+        dataset_tag = original_dataset_path.name + "_trainedOn" + split_train_view + "views"
 
         artifact_dir = os.path.join(dataset.cldm_dataset_path, "artifact_image", dataset_tag)
         gt_dir = os.path.join(dataset.cldm_dataset_path, "gt_image", dataset_tag)
