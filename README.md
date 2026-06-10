@@ -16,7 +16,6 @@ python train.py `
   --split_train_views 12 `
   --split_hold 8 `
   --split_train_sample_mode paper_even `
-  --split_output_root "{path_để_lưu_data_đã_chia}" `
   --split_copy_mode copy `
   --split_init_policy sparsegs_triangulate `
   --split_colmap_matcher exhaustive `
