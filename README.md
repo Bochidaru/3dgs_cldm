@@ -7,9 +7,8 @@ python train.py `
   --eval `
   --disable_viewer `
   --iterations 10000 `
-  --test_iterations 7000 10000 `
-  --save_iterations 7000 10000 `
-  --checkpoint_iterations 7000 10000 `
+  --test_iterations 10000 `
+  --save_iterations 10000 `
   --metrics_log_interval 0 `
   --metrics_eval_train_count -1 `
   --metrics_eval_per_view `
@@ -23,4 +22,5 @@ python train.py `
   --split_colmap_matcher exhaustive `
   --split_min_triangulated_points 100 `
   --split_force
+  --cldm_dataset_path ./cldm_dataset/
 ```
