@@ -161,6 +161,7 @@ def run_sparsegs_triangulate_init(
     matcher: str,
     min_points: int,
     force: bool,
+    colmap_gpu_flag: str,
 ) -> dict:
     if matcher not in {"exhaustive", "sequential"}:
         raise ValueError(f"unknown split_colmap_matcher: {matcher}")
@@ -194,7 +195,7 @@ def run_sparsegs_triangulate_init(
         "feature_extractor",
         "--database_path", database_path,
         "--image_path", train_images_dir,
-        "--SiftExtraction.use_gpu", "1",
+        "--SiftExtraction.use_gpu", colmap_gpu_flag,
     ]
     if len(train_cameras_subset) == 1:
         camera = next(iter(train_cameras_subset.values()))
@@ -225,7 +226,7 @@ def run_sparsegs_triangulate_init(
         [
             matcher_command,
             "--database_path", database_path,
-            "--SiftMatching.use_gpu", "1",
+            "--SiftMatching.use_gpu", colmap_gpu_flag,
         ],
         log_path=log_path,
         cwd=work_dir,

@@ -404,6 +404,7 @@ def prepare_auto_split(
     copy_mode: str = None,
     force: bool = None,
     init_policy: str = None,
+    colmap_cpu: bool = False
 ) -> dict:
     if output_root is not None:
         split_output_root = output_root
@@ -532,6 +533,9 @@ def prepare_auto_split(
             "reason": f"split_init_policy is {split_init_policy}",
         }
 
+        # Decide colmap device
+        colmap_gpu_flag = "0" if colmap_cpu else "1"
+
         if split_init_policy == "sparsegs_triangulate":
             sparsegs_triangulate_report = run_sparsegs_triangulate_init(
                 full_source_path=source_path,
@@ -542,6 +546,7 @@ def prepare_auto_split(
                 matcher=split_colmap_matcher,
                 min_points=split_min_triangulated_points,
                 force=split_force,
+                colmap_gpu_flag=colmap_gpu_flag,
             )
             train_model_stats = {
                 "camera_count": int(sparsegs_triangulate_report.get("triangulated_camera_count", 0)),
@@ -558,6 +563,7 @@ def prepare_auto_split(
                 full_reference_views_by_name={view.image_name: view for view in sorted_views},
                 require_all_registered=split_require_all_train_registered,
                 min_aligned_points=split_min_train_points,
+                colmap_gpu_flag=colmap_gpu_flag,
             )
             train_only_mapper_report = dict(train_only_result["report"])
             train_only_mapper_report["policy"] = "train_only_mapper"

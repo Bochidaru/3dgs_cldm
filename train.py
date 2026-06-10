@@ -1160,6 +1160,7 @@ if __name__ == "__main__":
             split_min_triangulated_points=args.split_min_triangulated_points,
             split_strict_sparsegs=args.split_strict_sparsegs,
             strict_no_overlap=args.split_strict_no_overlap,
+            colmap_cpu=args.colmap_cpu
         )
 
         if split_result["status"] != "PASS":

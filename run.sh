@@ -15,9 +15,10 @@ python train.py
   --split_train_views 12
   --split_hold 8
   --split_train_sample_mode paper_even
-  --split_copy_mode copy
+  --split_copy_mode symlink
   --split_init_policy sparsegs_triangulate
   --split_colmap_matcher exhaustive
   --split_min_triangulated_points 100
   --split_force
+  --colmap_cpu # In Linux, default colmap was not built with gpu
   --cldm_dataset_path ./cldm_dataset/

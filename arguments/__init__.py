@@ -107,6 +107,7 @@ class ModelParams(ParamGroup):
         self.auto_split_validation_report_path = ""
         self.source_path_original = ""
         self.cldm_dataset_path = ""
+        self.colmap_cpu = False
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):

@@ -159,6 +159,7 @@ def run_train_only_colmap(
     matcher: str,
     selected_train_views: Sequence,
     full_reference_views_by_name: dict,
+    colmap_gpu_flag: str,
     require_all_registered: bool = True,
     min_aligned_points: int = 100,
 ) -> dict:
@@ -180,7 +181,7 @@ def run_train_only_colmap(
             "--image_path", train_images_dir,
             "--ImageReader.camera_model", "PINHOLE",
             "--ImageReader.single_camera", "1",
-            "--SiftExtraction.use_gpu", "1",
+            "--SiftExtraction.use_gpu", colmap_gpu_flag,
         ],
         log_path=log_path,
         cwd=work_dir,
@@ -192,7 +193,7 @@ def run_train_only_colmap(
         [
             matcher_command,
             "--database_path", database_path,
-            "--SiftMatching.use_gpu", "1",
+            "--SiftMatching.use_gpu", colmap_gpu_flag,
         ],
         log_path=log_path,
         cwd=work_dir,
