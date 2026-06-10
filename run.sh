@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# In Linux, default colmap was not built with gpu, so we use colmap cpu
 python train.py \
   -s "{path_đến_data_full}" \
   -m "{path_đầu_ra_output}" \
@@ -20,5 +21,5 @@ python train.py \
   --split_colmap_matcher exhaustive \
   --split_min_triangulated_points 100 \
   --split_force \
-  --colmap_cpu \ # In Linux, default colmap was not built with gpu
+  --colmap_cpu \
   --cldm_dataset_path ./cldm_dataset/

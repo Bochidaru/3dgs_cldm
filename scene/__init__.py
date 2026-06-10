@@ -139,7 +139,7 @@ class Scene:
             self.test_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.test_cameras, resolution_scale, args, scene_info.is_nerf_synthetic, True)
 
             if args.cldm_dataset_path:
-                print("Loading Full Cameras")
+                print("Loading Full Cameras for CLDM Dataset")
                 self.cldm_cameras[resolution_scale] = cameraList_from_camInfos(scene_info.cldm_cameras, resolution_scale, args, scene_info.is_nerf_synthetic, False)
 
         if self.loaded_iter:
