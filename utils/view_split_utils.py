@@ -5,6 +5,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from scene.colmap_loader import qvec2rotmat
 
 import numpy as np
 

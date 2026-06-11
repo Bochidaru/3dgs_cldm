@@ -36,14 +36,14 @@ def save_tensor_as_image(tensor, path):
 
 def compute_d_pos_max(train_viewpoint_stack, cldm_cam):
     dists = []
-    Ta = cldm_cam.T
+    Ca = cldm_cam.camera_center
     for train_cam in train_viewpoint_stack:
-        Tb = train_cam.T
-        dists.append(np.linalg.norm(Ta - Tb))
+        Cb = train_cam.camera_center
+        dists.append(np.linalg.norm(Ca - Cb))
     return max(dists) if dists else 1.0
 
-def pose_distance(Ra, Ta, Rb, Tb, d_pos_max, lam=1.0):
-    d_pos = np.linalg.norm(Ta - Tb) / d_pos_max  # normalize [0,1]
+def pose_distance(Ra, Ca, Rb, Cb, d_pos_max, lam=1.0):
+    d_pos = np.linalg.norm(Ca - Cb) / d_pos_max  # normalize [0,1]
 
     va = Ra @ np.array([0,0,1])
     vb = Rb @ np.array([0,0,1])
@@ -57,19 +57,23 @@ def find_nearest_train_cams(train_viewpoint_stack, cldm_cam, lam=1.0, top_k=2):
     d_pos_max = compute_d_pos_max(train_viewpoint_stack, cldm_cam)
     distances = []
     for train_cam in train_viewpoint_stack:
-        d = pose_distance(cldm_cam.R, cldm_cam.T,
-                          train_cam.R, train_cam.T,
+        d = pose_distance(cldm_cam.R, cldm_cam.camera_center,
+                          train_cam.R, train_cam.camera_center,
                           d_pos_max, lam)
         distances.append((d, train_cam))
     distances.sort(key=lambda x: x[0])
     return [cam for _, cam in distances[:top_k]]
 
-def relative_extrinsics(R_art, T_art, R_near, T_near):
-    # Đưa ma trận R và T của ảnh near về cùng hệ với ảnh artifact
-    # R_art, R_near: (3,3), t_art, t_near: (3,)
-    R_rel = np.linalg.inv(R_art) @ R_near
-    T_rel = np.linalg.inv(R_art) @ (T_near - T_art)
-    return R_rel, T_rel
+def relative_pose(R_art, C_art, R_near, C_near):
+    # position of near in artifact coordinate frame
+    C_rel = R_art.T @ (C_near - C_art)
+    # rotation of near relative to artifact
+    R_rel = R_art.T @ R_near
+    rot6d = np.concatenate([
+        R_rel[:, 0],
+        R_rel[:, 1]
+    ])
+    return np.concatenate([C_rel, rot6d])
 
 def get_expon_lr_func(
     lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000

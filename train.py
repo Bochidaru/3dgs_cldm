@@ -21,7 +21,7 @@ from gaussian_renderer import render, network_gui
 import sys
 from scene import Scene, GaussianModel
 from utils.general_utils import (safe_state, get_expon_lr_func, save_tensor_as_image, find_nearest_train_cams,
-                                 relative_extrinsics)
+                                 relative_pose)
 import uuid
 from tqdm import tqdm
 from argparse import ArgumentParser, Namespace
@@ -866,7 +866,7 @@ def training(
         split_train_view=getattr(args, "split_train_views", False)
 
         original_dataset_path = Path(dataset.source_path_original)
-        dataset_tag = original_dataset_path.name + "_TrainedOn" + split_train_view + "views"
+        dataset_tag = original_dataset_path.name + "_TrainedOn" + str(split_train_view) + "views"
 
         artifact_dir = os.path.join(dataset.cldm_dataset_path, "artifact_image", dataset_tag)
         gt_dir = os.path.join(dataset.cldm_dataset_path, "gt_image", dataset_tag)
@@ -913,9 +913,9 @@ def training(
             save_tensor_as_image(near1.original_image, near1_image_path)
             save_tensor_as_image(near2.original_image, near2_image_path)
 
-            # Get relative extrinsic matrix of near to cldm cam
-            R_near1_rel, t_near1_rel = relative_extrinsics(cldm_cam.R, cldm_cam.T, near1.R, near1.T)
-            R_near2_rel, t_near2_rel = relative_extrinsics(cldm_cam.R, cldm_cam.T, near2.R, near2.T)
+            # Get relative pose vector of near to cldm cam (3 C rel + 6 rot6d rel)
+            near1_rel_pose = relative_pose(cldm_cam.R, cldm_cam.camera_center, near1.R, near1.camera_center)
+            near2_rel_pose = relative_pose(cldm_cam.R, cldm_cam.camera_center, near2.R, near2.camera_center)
 
             near1_rel_path = Path(os.path.relpath(near1_image_path, dataset.cldm_dataset_path)).as_posix()
             near2_rel_path = Path(os.path.relpath(near2_image_path, dataset.cldm_dataset_path)).as_posix()
@@ -928,13 +928,11 @@ def training(
                 "near": {
                     "near1": {
                         "path": near1_rel_path,
-                        "R": R_near1_rel.tolist(),
-                        "t": t_near1_rel.tolist()
+                        "pose_rel": near1_rel_pose.tolist()
                     },
                     "near2": {
                         "path": near2_rel_path,
-                        "R": R_near2_rel.tolist(),
-                        "t": t_near2_rel.tolist()
+                        "pose_rel": near2_rel_pose.tolist()
                     }
                 },
                 "prompt": "",
