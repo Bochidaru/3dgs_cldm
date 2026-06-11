@@ -2,13 +2,12 @@
 
 # In Linux, default colmap was not built with gpu, so we use colmap cpu
 python train.py \
-  -s "{path_đến_data_full}" \
-  -m "{path_đầu_ra_output}" \
+  -s "./data/..." \
+  -m "./output/..." \
   --eval \
   --disable_viewer \
   --iterations 10000 \
   --test_iterations 10000 \
-  --save_iterations 10000 \
   --metrics_log_interval 0 \
   --metrics_eval_train_count -1 \
   --metrics_eval_per_view \

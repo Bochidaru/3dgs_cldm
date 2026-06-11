@@ -34,6 +34,43 @@ def save_tensor_as_image(tensor, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     Image.fromarray(img_numpy).save(path)
 
+def compute_d_pos_max(train_viewpoint_stack, cldm_cam):
+    dists = []
+    Ta = cldm_cam.T
+    for train_cam in train_viewpoint_stack:
+        Tb = train_cam.T
+        dists.append(np.linalg.norm(Ta - Tb))
+    return max(dists) if dists else 1.0
+
+def pose_distance(Ra, Ta, Rb, Tb, d_pos_max, lam=1.0):
+    d_pos = np.linalg.norm(Ta - Tb) / d_pos_max  # normalize [0,1]
+
+    va = Ra @ np.array([0,0,1])
+    vb = Rb @ np.array([0,0,1])
+    cos_angle = np.dot(va, vb) / (np.linalg.norm(va)*np.linalg.norm(vb))
+    d_rot = np.arccos(np.clip(cos_angle, -1.0, 1.0)) / np.pi  # normalize [0,1]
+
+    return d_pos + lam * d_rot
+
+
+def find_nearest_train_cams(train_viewpoint_stack, cldm_cam, lam=1.0, top_k=2):
+    d_pos_max = compute_d_pos_max(train_viewpoint_stack, cldm_cam)
+    distances = []
+    for train_cam in train_viewpoint_stack:
+        d = pose_distance(cldm_cam.R, cldm_cam.T,
+                          train_cam.R, train_cam.T,
+                          d_pos_max, lam)
+        distances.append((d, train_cam))
+    distances.sort(key=lambda x: x[0])
+    return [cam for _, cam in distances[:top_k]]
+
+def relative_extrinsics(R_art, T_art, R_near, T_near):
+    # Đưa ma trận R và T của ảnh near về cùng hệ với ảnh artifact
+    # R_art, R_near: (3,3), t_art, t_near: (3,)
+    R_rel = np.linalg.inv(R_art) @ R_near
+    T_rel = np.linalg.inv(R_art) @ (T_near - T_art)
+    return R_rel, T_rel
+
 def get_expon_lr_func(
     lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000
 ):

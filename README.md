@@ -9,6 +9,7 @@ python train.py `
   --iterations 10000 `
   --test_iterations 10000 `
   --save_iterations 10000 `
+  --checkpoint_iterations 10000 `
   --metrics_log_interval 0 `
   --metrics_eval_train_count -1 `
   --metrics_eval_per_view `

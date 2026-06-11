@@ -20,7 +20,8 @@ from utils.image_utils import psnr
 from gaussian_renderer import render, network_gui
 import sys
 from scene import Scene, GaussianModel
-from utils.general_utils import safe_state, get_expon_lr_func, save_tensor_as_image
+from utils.general_utils import (safe_state, get_expon_lr_func, save_tensor_as_image, find_nearest_train_cams,
+                                 relative_extrinsics)
 import uuid
 from tqdm import tqdm
 from argparse import ArgumentParser, Namespace
@@ -865,17 +866,21 @@ def training(
         split_train_view=getattr(args, "split_train_views", False)
 
         original_dataset_path = Path(dataset.source_path_original)
-        dataset_tag = original_dataset_path.name + "_trainedOn" + split_train_view + "views"
+        dataset_tag = original_dataset_path.name + "_TrainedOn" + split_train_view + "views"
 
         artifact_dir = os.path.join(dataset.cldm_dataset_path, "artifact_image", dataset_tag)
         gt_dir = os.path.join(dataset.cldm_dataset_path, "gt_image", dataset_tag)
+        near_dir = os.path.join(dataset.cldm_dataset_path, "near_image", dataset_tag)
         os.makedirs(artifact_dir, exist_ok=True)
         os.makedirs(gt_dir, exist_ok=True)
+        os.makedirs(near_dir, exist_ok=True)
 
         jsonl_path = os.path.join(dataset.cldm_dataset_path, "dataset.jsonl")
-
         bg = torch.rand((3), device="cuda") if opt.random_background else background
-        cldm_viewpoint_stack = scene.getCldmCameras()
+
+        train_viewpoint_stack = scene.getTrainCameras().copy()
+        cldm_viewpoint_stack = scene.getCldmCameras().copy()
+
         for cldm_cam in cldm_viewpoint_stack:
             render_pkg = render(cldm_cam, gaussians, pipe, bg, use_trained_exp=dataset.train_test_exp, separate_sh=SPARSE_ADAM_AVAILABLE)
             artifact_image = render_pkg["render"]
@@ -884,24 +889,55 @@ def training(
             image_name = cldm_cam.image_name
             base_image_name = Path(image_name).stem
 
-            artifact_image_path = os.path.join(artifact_dir, f"{base_image_name}.png")
-            gt_image_path = os.path.join(gt_dir, f"{base_image_name}.png")
+            artifact_image_path = os.path.join(str(artifact_dir), f"{base_image_name}.png")
+            gt_image_path = os.path.join(str(gt_dir), f"{base_image_name}.png")
 
             save_tensor_as_image(artifact_image, artifact_image_path)
             save_tensor_as_image(gt_image, gt_image_path)
 
+            # Find resolution
             C, H, W = artifact_image.shape
             resolution = [H, W]
 
-            artifact_rel = Path(os.path.relpath(artifact_image_path, dataset.cldm_dataset_path)).as_posix()
-            gt_rel = Path(os.path.relpath(gt_image_path, dataset.cldm_dataset_path)).as_posix()
+            artifact_rel_path = Path(os.path.relpath(artifact_image_path, dataset.cldm_dataset_path)).as_posix()
+            gt_rel_path = Path(os.path.relpath(gt_image_path, dataset.cldm_dataset_path)).as_posix()
+
+            # Find 2 nearest train image to current cldm cam
+            near1, near2 = find_nearest_train_cams(train_viewpoint_stack, cldm_cam, lam=1, top_k=2)
+            near_sub_dir = os.path.join(str(near_dir), base_image_name)
+            os.makedirs(near_sub_dir, exist_ok=True)
+            base_image_name_near1, base_image_name_near2 = Path(near1.image_name).stem, Path(near2.image_name).stem
+            near1_image_path = os.path.join(near_sub_dir, f"near1_{base_image_name_near1}.png")
+            near2_image_path = os.path.join(near_sub_dir, f"near2_{base_image_name_near2}.png")
+
+            save_tensor_as_image(near1.original_image, near1_image_path)
+            save_tensor_as_image(near2.original_image, near2_image_path)
+
+            # Get relative extrinsic matrix of near to cldm cam
+            R_near1_rel, t_near1_rel = relative_extrinsics(cldm_cam.R, cldm_cam.T, near1.R, near1.T)
+            R_near2_rel, t_near2_rel = relative_extrinsics(cldm_cam.R, cldm_cam.T, near2.R, near2.T)
+
+            near1_rel_path = Path(os.path.relpath(near1_image_path, dataset.cldm_dataset_path)).as_posix()
+            near2_rel_path = Path(os.path.relpath(near2_image_path, dataset.cldm_dataset_path)).as_posix()
 
             record = {
                 "dataset_tag": dataset_tag,
                 "resolution": resolution,
-                "source": artifact_rel,
-                "target": gt_rel,
-                "prompt": ""
+                "source": artifact_rel_path,
+                "target": gt_rel_path,
+                "near": {
+                    "near1": {
+                        "path": near1_rel_path,
+                        "R": R_near1_rel.tolist(),
+                        "t": t_near1_rel.tolist()
+                    },
+                    "near2": {
+                        "path": near2_rel_path,
+                        "R": R_near2_rel.tolist(),
+                        "t": t_near2_rel.tolist()
+                    }
+                },
+                "prompt": "",
             }
 
             # Append vào file JSONL
@@ -1082,6 +1118,7 @@ def training_report(
             eval_summaries={},
             per_view_rows=None,
         )
+
 
 if __name__ == "__main__":
     # Set up command line argument parser
