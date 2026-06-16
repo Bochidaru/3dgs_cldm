@@ -29,54 +29,42 @@ with open("dataset_strategy.yaml", "r") as f:
 
 def create_arg(is_sparsegs_triangulate, scene_path, output_path, split_train_view, split_train_sample_mode, stride=0,
                start_pos=0):
+    base_arg = [
+        env, "train.py",
+        "-s", scene_path,
+        "-m", output_path,
+        "--eval", "--disable_viewer",
+        "--iteration", str(iteration),
+        "--test_iterations", str(test_iteration),
+        "--metrics_log_interval", str(0),
+        "--metrics_eval_train_count", str(-1),
+        "--metrics_eval_per_view", "--metrics_compute_lpips",
+        "--split_train_views", str(split_train_view),
+        "--split_hold", str(SPLIT_HOLD),
+        "--split_train_sample_mode", split_train_sample_mode,
+        "--split_copy_mode", split_copy_mode,
+        "--split_colmap_matcher", "exhaustive",
+        "--split_min_triangulated_points", str(split_min_triangulated_points),
+        "--split_force",
+        "--for_cldm",
+        "--cldm_dataset_path", cldm_dataset_path
+    ]
+
     if is_sparsegs_triangulate:
-        arg = [
-            env, "train.py",
-            "-s", scene_path,
-            "-m", output_path,
-            "--eval", "--disable_viewer",
-            "--iteration", str(iteration),
-            "--test_iterations", str(test_iteration),
-            "--metrics_log_interval", str(0),
-            "--metrics_eval_train_count", str(-1),
-            "--metrics_eval_per_view", "--metrics_compute_lpips",
-            "--split_train_views", str(split_train_view),
-            "--split_hold", str(SPLIT_HOLD),
-            "--split_train_sample_mode", split_train_sample_mode,
-            "--split_copy_mode", split_copy_mode,
-            "--split_init_policy", STRAT1,
-            "--split_colmap_matcher", "exhaustive",
-            "--split_min_triangulated_points", str(split_min_triangulated_points),
-            "--split_force",
-            "--for_cldm",
-            "--cldm_dataset_path", cldm_dataset_path
-        ]
+        base_arg.extend(["--split_init_policy", STRAT1])
     else:
-        arg = [
-            env, "train.py",
-            "-s", scene_path,
-            "-m", output_path,
-            "--eval", "--disable_viewer",
-            "--iteration", str(iteration),
-            "--test_iterations", str(test_iteration),
-            "--metrics_log_interval", str(0),
-            "--metrics_eval_train_count", str(-1),
-            "--metrics_eval_per_view", "--metrics_compute_lpips",
-            "--split_train_views", str(split_train_view),
-            "--split_hold", str(SPLIT_HOLD),
-            "--split_train_sample_mode", split_train_sample_mode,
-            "--split_copy_mode", split_copy_mode,
+        base_arg.extend([
             "--split_init_policy", STRAT2,
             "--cluster_stride", str(stride),
-            "--cluster_start_pos", str(start_pos),
-            "--split_colmap_matcher", "exhaustive",
-            "--split_min_triangulated_points", str(split_min_triangulated_points),
-            "--split_force",
-            "--for_cldm",
-            "--cldm_dataset_path", cldm_dataset_path
-        ]
+            "--cluster_start_pos", str(start_pos)
+        ])
 
-    return arg
+    # use colmap cpu on linux
+    if os.name != "nt":
+        base_arg.append("--colmap_cpu")
+
+    return base_arg
+
 
 
 def process_config(config: dict, dataset_name, scene_name, scene_path):
