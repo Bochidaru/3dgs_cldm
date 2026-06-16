@@ -3,14 +3,13 @@ import yaml
 import os
 
 
-
 SPLIT_HOLD = 10000
 STRAT1 = "sparsegs_triangulate"
 STRAT2 = "train_only_mapper"
 split_min_triangulated_points = 50
 cldm_dataset_path = "./cldm_dataset"
-iteration = 10000
 test_iteration = 10000
+
 
 if os.name == "nt":
     iteration = 1
@@ -18,9 +17,11 @@ if os.name == "nt":
     split_copy_mode = "copy"
     data_root_path = f"D:/3dgs_improved_data"
 else:
+    iteration = 10000
     env = "python"
     data_root_path = "./"
     split_copy_mode = "symlink"
+
 
 with open("dataset_strategy.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -135,4 +136,3 @@ for sub_run in args:
     print("Running:", " ".join(sub_run))
     subprocess.run(sub_run)
     print("================================================================================")
-    id += 1
