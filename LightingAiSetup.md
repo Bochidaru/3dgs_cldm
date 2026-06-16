@@ -1,4 +1,5 @@
-1. install gcc g++ 9
+1. git clone https://github.com/Bochidaru/3dgs_cldm.git
+2. install gcc g++ 9
    * sudo apt update
    * sudo apt install gcc-9 g++-9
    * sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90 && sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 90
@@ -16,19 +17,19 @@
 
 4. create stub libittnotify
 `
-echo '#ifdef __cplusplus
-extern "C" {
-#endif
-#include <stdarg.h>
-void iJIT_NotifyEvent(int a, ...) {}
-void iJIT_NotifyEventW(int a, ...) {}
-int  iJIT_IsProfilingActive(void) { return 0; }
-int  iJIT_GetNewMethodID(void) { return 1; }
-int  iJIT_GetNewMethodIDEx(void) { return 1; }
-void iJIT_NotifyEventStr(int a, ...) {}
-void iJIT_NotifyEventEx(int a, ...) {}
-#ifdef __cplusplus
-}
+echo '#ifdef __cplusplus \
+extern "C" { \
+#endif \
+#include <stdarg.h> \
+void iJIT_NotifyEvent(int a, ...) {} \
+void iJIT_NotifyEventW(int a, ...) {} \
+int  iJIT_IsProfilingActive(void) { return 0; } \
+int  iJIT_GetNewMethodID(void) { return 1; } \
+int  iJIT_GetNewMethodIDEx(void) { return 1; } \
+void iJIT_NotifyEventStr(int a, ...) {} \
+void iJIT_NotifyEventEx(int a, ...) {} \
+#ifdef __cplusplus \
+} \
 #endif' > "$CONDA_PREFIX/lib/itt_stub.c"
 `
    * gcc -shared -fPIC -O2 -o "$CONDA_PREFIX/lib/libittnotify.so" "$CONDA_PREFIX/lib/itt_stub.c"
@@ -36,12 +37,12 @@ void iJIT_NotifyEventEx(int a, ...) {}
 
 5. set environment variables (copy all the below and run)
 `
-export LD_PRELOAD=$CONDA_PREFIX/lib/libittnotify.so
-export TORCH_CUDA_ARCH_LIST="8.6"
-echo 'export LD_PRELOAD=$CONDA_PREFIX/lib/libittnotify.so${LD_PRELOAD:+:$LD_PRELOAD}' >> ~/.zshrc
-echo 'export TORCH_CUDA_ARCH_LIST="8.6"' >> ~/.zshrc
-source ~/.zshrc
-echo $LD_PRELOAD
+export LD_PRELOAD=$CONDA_PREFIX/lib/libittnotify.so \ 
+export TORCH_CUDA_ARCH_LIST="8.6" \
+echo 'export LD_PRELOAD=$CONDA_PREFIX/lib/libittnotify.so${LD_PRELOAD:+:$LD_PRELOAD}' >> ~/.zshrc \
+echo 'export TORCH_CUDA_ARCH_LIST="8.6"' >> ~/.zshrc \
+source ~/.zshrc \
+echo $LD_PRELOAD \
 echo $TORCH_CUDA_ARCH_LIST
 `
 
@@ -49,5 +50,6 @@ echo $TORCH_CUDA_ARCH_LIST
    * conda env update -f environment.yml
 
 7. create run.sh and run (only on linux)
+   * download dataset with gdown: gdown 1iCNBXQyHRcb7I2k0BiHWhkZHxH8USFJR  (for example)
    * chmod +x run.sh
    * ./run.sh
