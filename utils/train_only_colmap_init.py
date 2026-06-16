@@ -160,6 +160,7 @@ def run_train_only_colmap(
     selected_train_views: Sequence,
     full_reference_views_by_name: dict,
     colmap_gpu_flag: str,
+    for_cldm : bool,
     require_all_registered: bool = True,
     min_aligned_points: int = 100,
 ) -> dict:
@@ -311,11 +312,19 @@ def run_train_only_colmap(
     all_train_views_registered = len(missing_registered) == 0 and len(raw_images) >= len(selected_train_views)
 
     if require_all_registered and not all_train_views_registered:
-        raise RuntimeError(
-            "train_only_colmap did not register all selected train views. "
-            f"registered={len(raw_images)}, requested={len(selected_train_views)}, "
-            f"missing={missing_registered[:20]}"
-        )
+        if not for_cldm:
+            raise RuntimeError(
+                "train_only_colmap did not register all selected train views. "
+                f"registered={len(raw_images)}, requested={len(selected_train_views)}, "
+                f"missing={missing_registered[:20]}"
+            )
+        else:
+            all_train_views_registered = True
+            print(f"[INFO] Removed unregistered train image: {', '.join(missing_registered)}")
+            for miss in missing_registered:
+                img_path = os.path.join(train_images_dir, miss)
+                if os.path.exists(img_path):
+                    os.remove(img_path)
 
     reference_by_name = {
         normalized_rel_name(name): view

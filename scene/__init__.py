@@ -78,6 +78,7 @@ class Scene:
                 split_only=getattr(args, "split_only", False),
                 source_path_original=getattr(args, "source_path_original", False),
                 cldm_dataset_path=getattr(args, "cldm_dataset_path", False),
+                missing_registered=args.missing_registered
             )
         elif os.path.exists(os.path.join(args.source_path, "transforms_train.json")):
             print("Found transforms_train.json file, assuming Blender data set!")

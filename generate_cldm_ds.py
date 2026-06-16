@@ -1,6 +1,8 @@
 import subprocess
 import yaml
 import os
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 SPLIT_HOLD = 10000
@@ -9,6 +11,7 @@ STRAT2 = "train_only_mapper"
 split_min_triangulated_points = 50
 cldm_dataset_path = "./cldm_dataset"
 test_iteration = 10000
+save_iteration = 30000  # nếu không muốn save gauss .ply thì set cao hơn iteration là được
 
 
 if os.name == "nt":
@@ -36,6 +39,7 @@ def create_arg(is_sparsegs_triangulate, scene_path, output_path, split_train_vie
         "--eval", "--disable_viewer",
         "--iteration", str(iteration),
         "--test_iterations", str(test_iteration),
+        "--save_iterations", str(save_iteration),
         "--metrics_log_interval", str(0),
         "--metrics_eval_train_count", str(-1),
         "--metrics_eval_per_view", "--metrics_compute_lpips",
@@ -64,7 +68,6 @@ def create_arg(is_sparsegs_triangulate, scene_path, output_path, split_train_vie
         base_arg.append("--colmap_cpu")
 
     return base_arg
-
 
 
 def process_config(config: dict, dataset_name, scene_name, scene_path):
@@ -119,8 +122,9 @@ for dataset_name in config:
             args.extend(config_args)
 
 
-for sub_run in args:
+total = len(args)
+for i, sub_run in enumerate(args, 1):
     print("================================================================================")
-    print("Running:", " ".join(sub_run))
+    print(f"[{i}/{total}] Running: {' '.join(sub_run)}")
     subprocess.run(sub_run)
     print("================================================================================")

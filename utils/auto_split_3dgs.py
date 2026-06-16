@@ -266,7 +266,7 @@ def _base_assertions(report: dict):
     return assertions
 
 
-def validate_split_report(report: dict, strict_no_overlap=True):
+def validate_split_report(report: dict, strict_no_overlap=True, for_cldm=False):
     checks = {}
 
     def check(name, condition):
@@ -295,7 +295,8 @@ def validate_split_report(report: dict, strict_no_overlap=True):
     check("duplicate_test_zero", report.get("assertions", {}).get("duplicate_test_zero") is True)
     check("local_cluster_guard_pass", report.get("assertions", {}).get("local_cluster_guard_pass") is True)
     check("pose_coverage_guard_pass", report.get("assertions", {}).get("pose_coverage_guard_pass") is True)
-    check("train_folder_image_count", len(_list_images(os.path.join(train_source_path, "images"))) == int(report.get("train_view_count", -1)))
+    if not for_cldm:
+        check("train_folder_image_count", len(_list_images(os.path.join(train_source_path, "images"))) == int(report.get("train_view_count", -1)))
     check("test_folder_image_count", len(_list_images(os.path.join(test_source_path, "images"))) == int(report.get("test_view_count", -1)))
     check("train_sparse_cameras_bin_exists", os.path.isfile(os.path.join(train_sparse, "cameras.bin")))
     check("train_sparse_images_bin_exists", os.path.isfile(os.path.join(train_sparse, "images.bin")))
@@ -569,6 +570,7 @@ def prepare_auto_split(
                 require_all_registered=split_require_all_train_registered,
                 min_aligned_points=split_min_train_points,
                 colmap_gpu_flag=colmap_gpu_flag,
+                for_cldm=for_cldm,
             )
             train_only_mapper_report = dict(train_only_result["report"])
             train_only_mapper_report["policy"] = "train_only_mapper"
@@ -726,7 +728,7 @@ def prepare_auto_split(
         _write_json(os.path.join(reports_dir, "sparsegs_triangulate_report.json"), sparsegs_triangulate_report)
         _write_json(os.path.join(reports_dir, "train_only_mapper_report.json"), train_only_mapper_report)
 
-        validation_report = validate_split_report(report, strict_no_overlap=strict_no_overlap)
+        validation_report = validate_split_report(report, strict_no_overlap=strict_no_overlap, for_cldm=for_cldm)
         if validation_report["status"] != "PASS":
             report["status"] = "FAIL"
             report["failure_reasons"] = validation_report["failed_checks"]
@@ -767,6 +769,9 @@ def prepare_auto_split(
             "train_count": report["train_view_count"],
             "overlap_count": report["overlap_by_image_name_count"],
             "protocol": report["protocol"],
+            "missing_registered": report.get("train_only_mapper", {}).get("missing_registered_train_views", []),
         }
     except Exception as exc:
+        import traceback
+        traceback.print_exc()
         return _write_fail(source_path, split_root, reports_dir, str(exc))

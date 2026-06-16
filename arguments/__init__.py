@@ -99,7 +99,7 @@ class ModelParams(ParamGroup):
         self.split_colmap_exe = "colmap"
         self.split_colmap_matcher = "exhaustive"
         self.split_require_all_train_registered = True
-        self.split_min_train_points = 100
+        self.split_min_train_points = 20
         self.split_min_triangulated_points = 100
         self.split_strict_sparsegs = True
         self.external_test_source_path = ""
@@ -111,6 +111,7 @@ class ModelParams(ParamGroup):
         self.cluster_stride = 0
         self.cluster_start_pos = 0
         self.for_cldm = False
+        self.missing_registered = []
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):

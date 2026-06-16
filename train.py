@@ -865,15 +865,22 @@ def training(
 
         split_train_view = getattr(args, "split_train_views", False)
 
-        original_dataset_path = Path(dataset.source_path_original)
-        dataset_tag = original_dataset_path.name + "_" + dataset.split_train_sample_mode + "_TrainedOn" + str(split_train_view) + "views"
+        original_scene_path = Path(dataset.source_path_original)
+        dataset_name = original_scene_path.parent.name
 
-        artifact_dir = os.path.join(dataset.cldm_dataset_path, "artifact_image", dataset_tag)
-        gt_dir = os.path.join(dataset.cldm_dataset_path, "gt_image", dataset_tag)
-        near_dir = os.path.join(dataset.cldm_dataset_path, "near_image", dataset_tag)
+        if len(dataset.missing_registered) > 0:
+            scene_tag = (original_scene_path.name + "_" + dataset.split_train_sample_mode + "_TrainedOn" +
+                         str(split_train_view) + "views" + f"_missed{len(dataset.missing_registered)}views")
+        else:
+            scene_tag = (original_scene_path.name + "_" + dataset.split_train_sample_mode + "_TrainedOn" +
+                         str(split_train_view) + "views")
+
+        artifact_dir = os.path.join(dataset.cldm_dataset_path, "artifact_image", dataset_name, scene_tag)
+        gt_dir = os.path.join(dataset.cldm_dataset_path, "gt_image", dataset_name, scene_tag)
+        ref_dir = os.path.join(dataset.cldm_dataset_path, "ref_image", dataset_name, scene_tag)
         os.makedirs(artifact_dir, exist_ok=True)
         os.makedirs(gt_dir, exist_ok=True)
-        os.makedirs(near_dir, exist_ok=True)
+        os.makedirs(ref_dir, exist_ok=True)
 
         jsonl_path = os.path.join(dataset.cldm_dataset_path, "dataset.jsonl")
         bg = torch.rand((3), device="cuda") if opt.random_background else background
@@ -909,24 +916,24 @@ def training(
             # Find 2 reference train image to current cldm cam (cldm cam == pseudo view == artifact view)
             cldm_cam.camera_center = cldm_cam.camera_center.cpu().numpy()
             ref1, ref2 = find_ref_train_cams(train_viewpoint_stack, cldm_cam)
-            near_sub_dir = os.path.join(str(near_dir), base_image_name)
-            os.makedirs(near_sub_dir, exist_ok=True)
-            base_image_name_near1, base_image_name_near2 = Path(ref1.image_name).stem, Path(ref2.image_name).stem
-            near1_image_path = os.path.join(near_sub_dir, f"near1_{base_image_name_near1}.png")
-            near2_image_path = os.path.join(near_sub_dir, f"near2_{base_image_name_near2}.png")
+            ref_sub_dir = os.path.join(str(ref_dir), base_image_name)
+            os.makedirs(ref_sub_dir, exist_ok=True)
+            base_image_name_ref1, base_image_name_ref2 = Path(ref1.image_name).stem, Path(ref2.image_name).stem
+            ref1_image_path = os.path.join(ref_sub_dir, f"ref1_{base_image_name_ref1}.png")
+            ref2_image_path = os.path.join(ref_sub_dir, f"ref2_{base_image_name_ref2}.png")
 
-            save_tensor_as_image(ref1.original_image, near1_image_path)
-            save_tensor_as_image(ref2.original_image, near2_image_path)
+            save_tensor_as_image(ref1.original_image, ref1_image_path)
+            save_tensor_as_image(ref2.original_image, ref2_image_path)
 
             # Get relative pose vector of ref to current cldm cam (3 C rel + 6 rot6d rel)
             ref1_rel_pose = relative_pose(cldm_cam.R, cldm_cam.camera_center, ref1.R, ref1.camera_center)
             ref2_rel_pose = relative_pose(cldm_cam.R, cldm_cam.camera_center, ref2.R, ref2.camera_center)
 
-            ref1_rel_path = Path(os.path.relpath(near1_image_path, dataset.cldm_dataset_path)).as_posix()
-            ref2_rel_path = Path(os.path.relpath(near2_image_path, dataset.cldm_dataset_path)).as_posix()
+            ref1_rel_path = Path(os.path.relpath(ref1_image_path, dataset.cldm_dataset_path)).as_posix()
+            ref2_rel_path = Path(os.path.relpath(ref2_image_path, dataset.cldm_dataset_path)).as_posix()
 
             record = {
-                "dataset_tag": dataset_tag,
+                "dataset_tag": scene_tag,
                 "resolution": resolution,
                 "source": artifact_rel_path,
                 "target": gt_rel_path,
@@ -941,7 +948,7 @@ def training(
                     }
                 },
                 "prompt": "",
-                "is_test": True if "_Test_" in str(original_dataset_path) else False
+                "is_test": True if "_test_" in str(original_scene_path).lower() else False
             }
 
             # Append vào file JSONL
@@ -1206,6 +1213,10 @@ if __name__ == "__main__":
             cluster_start_pos=args.cluster_start_pos,
             for_cldm=args.for_cldm,
         )
+
+        if args.split_init_policy in ["train_only_mapper", "train_only_colmap"]:
+            missing_registered = split_result.get("missing_registered")
+            args.missing_registered = missing_registered
 
         if split_result["status"] != "PASS":
             raise RuntimeError(

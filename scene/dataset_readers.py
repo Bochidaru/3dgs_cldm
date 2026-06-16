@@ -965,10 +965,17 @@ def readColmapSceneInfo(
     model_path=None,
     split_only=False,
     source_path_original="",
-    cldm_dataset_path=""
+    cldm_dataset_path="",
+    missing_registered=None,
 ):
     train_source_path = path
     cam_extrinsics, cam_intrinsics, train_sparse_format = _read_colmap_extrinsics_intrinsics(train_source_path)
+
+    cam_extrinsics = {
+        k: v
+        for k, v in cam_extrinsics.items()
+        if v.name.lower() not in missing_registered
+    }
 
     depth_params_file = os.path.join(train_source_path, "sparse/0", "depth_params.json")
     ## if depth_params_file isnt there AND depths file is here -> throw error

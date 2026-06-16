@@ -47,7 +47,7 @@ def loadCam(args, id, cam_info, resolution_scale, is_nerf_synthetic, is_test_dat
             if orig_w > 1000:
                 global WARNED
                 if not WARNED:
-                    print("[ INFO ] Encountered quite large input images (>1.6K pixels width), rescaling to 1K.\n "
+                    print("[ INFO ] Encountered quite large input images (>1K pixels width), rescaling to 1K.\n "
                         "If this is not desired, please explicitly specify '--resolution/-r' as 1")
                     WARNED = True
                 global_down = orig_w / 1000
