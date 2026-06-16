@@ -1,193 +1,193 @@
 # dataset_strategy.yaml
 
-#co3d:
-#  default_config:
-#    sparsegs_triangulate:
-#      split_method: paper_even  # paper_even cluster_stride pose_fps
-#      runs:
-#        - n_views: 12
-#    train_only_mapper:
-#      split_method: cluster_stride
-#      runs:
-#        - n_views: 9
-#          stride: 3
-#          start_pos: 0
-#  split_hold: 1000
-#  not_include: []
-#  test: [car2]
-#  scene:
-#    car1:
-#      sparsegs_triangulate:
-#        split_method: pose_fps
-#        runs:
-#          - n_views: 12
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 9
-#            stride: 3
-#            start_pos: 0
-#    car2:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 12
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 9
-#            stride: 4
-#            start_pos: 0
-#    car3:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 18
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 12
-#            stride: 3
-#            start_pos: 0
-#    car4:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 15
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 12
-#            stride: 2
-#            start_pos: 0
-#    car5:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 12
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 6
-#            stride: 4
-#            start_pos: 0
-#
-#
-#DTU:
-#  default_config:
-#    sparsegs_triangulate:
-#      split_method: paper_even
-#      runs:
-#        - n_views: 6
-#    train_only_mapper:
-#      split_method: cluster_stride
-#      runs:
-#        - n_views: 4
-#          stride: 1
-#          start_pos: 10
-#  not_include: []
-#  test: [scan114]
-#  scene:
-#    scan110: default
-#    scan114: default
-#    scan65: default
-#
-#
-#mipnerf360:
-#  default_config:
-#    sparsegs_triangulate:
-#      split_method: paper_even
-#      runs:
-#        - n_views: 12
-#    train_only_mapper:
-#      split_method: cluster_stride
-#      runs:
-#        - n_views: 12
-#          stride: 1
-#          start_pos: 0
-#  not_include: [room]
-#  test: [garden]
-#  scene:
-#    bicycle:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 15
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 12
-#            stride: 1
-#            start_pos: 0
-#    bonsai:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 15
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 12
-#            stride: 2
-#            start_pos: 0
-#    counter:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 12
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 9
-#            stride: 3
-#            start_pos: 100
-#    flowers: default
-#    garden:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 12
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 9
-#            stride: 2
-#            start_pos: 0
-#    kitchen:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 12
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 9
-#            stride: 3
-#            start_pos: 0
-#    room: default
-#    stump:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 15
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 12
-#            stride: 1
-#            start_pos: 0
-#    treehill:
-#      sparsegs_triangulate:
-#        split_method: paper_even
-#        runs:
-#          - n_views: 15
-#      train_only_mapper:
-#        split_method: cluster_stride
-#        runs:
-#          - n_views: 12
-#            stride: 1
-#            start_pos: 0
-#
+co3d:
+  default_config:
+    sparsegs_triangulate:
+      split_method: paper_even  # paper_even cluster_stride pose_fps
+      runs:
+        - n_views: 12
+    train_only_mapper:
+      split_method: cluster_stride
+      runs:
+        - n_views: 9
+          stride: 3
+          start_pos: 0
+  split_hold: 1000
+  not_include: []
+  test: [car2]
+  scene:
+    car1:
+      sparsegs_triangulate:
+        split_method: pose_fps
+        runs:
+          - n_views: 12
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 9
+            stride: 3
+            start_pos: 0
+    car2:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 12
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 9
+            stride: 4
+            start_pos: 0
+    car3:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 18
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 12
+            stride: 3
+            start_pos: 0
+    car4:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 15
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 12
+            stride: 2
+            start_pos: 0
+    car5:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 12
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 6
+            stride: 4
+            start_pos: 0
+
+
+DTU:
+  default_config:
+    sparsegs_triangulate:
+      split_method: paper_even
+      runs:
+        - n_views: 6
+    train_only_mapper:
+      split_method: cluster_stride
+      runs:
+        - n_views: 4
+          stride: 1
+          start_pos: 10
+  not_include: []
+  test: [scan114]
+  scene:
+    scan110: default
+    scan114: default
+    scan65: default
+
+
+mipnerf360:
+  default_config:
+    sparsegs_triangulate:
+      split_method: paper_even
+      runs:
+        - n_views: 12
+    train_only_mapper:
+      split_method: cluster_stride
+      runs:
+        - n_views: 12
+          stride: 1
+          start_pos: 0
+  not_include: [room]
+  test: [garden]
+  scene:
+    bicycle:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 15
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 12
+            stride: 1
+            start_pos: 0
+    bonsai:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 15
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 12
+            stride: 2
+            start_pos: 0
+    counter:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 12
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 9
+            stride: 3
+            start_pos: 100
+    flowers: default
+    garden:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 12
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 9
+            stride: 2
+            start_pos: 0
+    kitchen:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 12
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 9
+            stride: 3
+            start_pos: 0
+    room: default
+    stump:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 15
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 12
+            stride: 1
+            start_pos: 0
+    treehill:
+      sparsegs_triangulate:
+        split_method: paper_even
+        runs:
+          - n_views: 15
+      train_only_mapper:
+        split_method: cluster_stride
+        runs:
+          - n_views: 12
+            stride: 1
+            start_pos: 0
+
 
 nerf_llff_data:
   default_config:

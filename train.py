@@ -933,7 +933,7 @@ def training(
             ref2_rel_path = Path(os.path.relpath(ref2_image_path, dataset.cldm_dataset_path)).as_posix()
 
             record = {
-                "dataset_tag": scene_tag,
+                "scene_tag": scene_tag,
                 "resolution": resolution,
                 "source": artifact_rel_path,
                 "target": gt_rel_path,
