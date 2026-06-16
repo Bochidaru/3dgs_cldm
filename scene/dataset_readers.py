@@ -1320,7 +1320,7 @@ def readColmapSceneInfo(
     if cldm_dataset_path:
         cldm_cam_extrinsics, cldm_cam_intrinsics, cldm_train_sparse_format = _read_colmap_extrinsics_intrinsics(source_path_original)
 
-        train_cam_name = [caminfo.image_name for caminfo in train_cam_infos]
+        train_cam_name = [caminfo.image_name for caminfo in train_cam_infos]  # loại trừ cam đã được pick vào train_cam để tạo cldm_cams
         train_reading_dir = "images" if images is None else images
         cldm_cam_infos_unsorted = readColmapCameras(
             cam_extrinsics=cldm_cam_extrinsics,

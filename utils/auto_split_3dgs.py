@@ -404,7 +404,10 @@ def prepare_auto_split(
     copy_mode: str = None,
     force: bool = None,
     init_policy: str = None,
-    colmap_cpu: bool = False
+    colmap_cpu: bool = False,
+    cluster_stride: int = 0,
+    cluster_start_pos: int = 0,
+    for_cldm: bool = False,
 ) -> dict:
     if output_root is not None:
         split_output_root = output_root
@@ -415,9 +418,9 @@ def prepare_auto_split(
     if init_policy is not None:
         split_init_policy = init_policy
 
-    valid_train_views = {"full", "3", "6", "9", "12", "24"}
+    valid_train_views = {"full", "3", "4", "6", "9", "12", "15", "18", "24"}
     valid_copy_modes = {"copy", "hardlink", "symlink"}
-    valid_sample_modes = {"paper_even", "pose_fps"}
+    valid_sample_modes = {"paper_even", "pose_fps", "cluster_stride"}
     valid_init_policies = {"sparsegs_triangulate", "subset_colmap", "train_only_mapper", "train_only_colmap"}
 
     source_path = os.path.abspath(source_path)
@@ -487,10 +490,12 @@ def prepare_auto_split(
             hold=split_hold,
             train_views=split_train_views,
             sample_mode=split_train_sample_mode,
+            stride=cluster_stride,
+            start_pos=cluster_start_pos
         )
 
-        sequence_coverage = compute_sequence_coverage(selected_train, sorted_views)
-        pose_audit = compute_pose_audit(selected_train, sorted_views)
+        sequence_coverage = compute_sequence_coverage(selected_train, sorted_views, for_cldm)
+        pose_audit = compute_pose_audit(selected_train, sorted_views, for_cldm)
         if not sequence_coverage["local_cluster_guard_pass"]:
             return _write_fail(
                 source_path,

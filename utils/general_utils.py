@@ -17,8 +17,10 @@ import random
 from PIL import Image
 import os
 
+
 def inverse_sigmoid(x):
-    return torch.log(x/(1-x))
+    return torch.log(x / (1 - x))
+
 
 def PILtoTorch(pil_image, resolution):
     resized_image_PIL = pil_image.resize(resolution)
@@ -28,55 +30,110 @@ def PILtoTorch(pil_image, resolution):
     else:
         return resized_image.unsqueeze(dim=-1).permute(2, 0, 1)
 
+
 def save_tensor_as_image(tensor, path):
     tensor = tensor.detach().cpu()
     img_numpy = (tensor.permute(1, 2, 0).numpy() * 255).astype(np.uint8)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     Image.fromarray(img_numpy).save(path)
 
-def compute_d_pos_max(train_viewpoint_stack, cldm_cam):
+
+def compute_d_pos_max(viewpoint_stack, cur_cam):
     dists = []
-    Ca = cldm_cam.camera_center
-    for train_cam in train_viewpoint_stack:
-        Cb = train_cam.camera_center
+    Ca = cur_cam.camera_center
+    for cam in viewpoint_stack:
+        Cb = cam.camera_center
         dists.append(np.linalg.norm(Ca - Cb))
     return max(dists) if dists else 1.0
+
 
 def pose_distance(Ra, Ca, Rb, Cb, d_pos_max, lam=1.0):
     d_pos = np.linalg.norm(Ca - Cb) / d_pos_max  # normalize [0,1]
 
-    va = Ra @ np.array([0,0,1])
-    vb = Rb @ np.array([0,0,1])
-    cos_angle = np.dot(va, vb) / (np.linalg.norm(va)*np.linalg.norm(vb))
+    va = Ra @ np.array([0, 0, 1])
+    vb = Rb @ np.array([0, 0, 1])
+    cos_angle = np.dot(va, vb) / (np.linalg.norm(va) * np.linalg.norm(vb))
     d_rot = np.arccos(np.clip(cos_angle, -1.0, 1.0)) / np.pi  # normalize [0,1]
 
     return d_pos + lam * d_rot
 
 
-def find_nearest_train_cams(train_viewpoint_stack, cldm_cam, lam=1.0, top_k=2):
-    d_pos_max = compute_d_pos_max(train_viewpoint_stack, cldm_cam)
-    distances = []
-    for train_cam in train_viewpoint_stack:
-        d = pose_distance(cldm_cam.R, cldm_cam.camera_center,
-                          train_cam.R, train_cam.camera_center,
-                          d_pos_max, lam)
-        distances.append((d, train_cam))
-    distances.sort(key=lambda x: x[0])
-    return [cam for _, cam in distances[:top_k]]
+def find_ref_train_cams(train_viewpoint_stack, target_cam, lam=1.0, alpha=0.8):
+    """
+    Select two reference views.
 
-def relative_pose(R_art, C_art, R_near, C_near):
-    # position of near in artifact coordinate frame
-    C_rel = R_art.T @ (C_near - C_art)
+    First reference:
+        nearest pose to target.
+
+    Second reference:
+        balance between:
+            - closeness to target
+            - diversity from first reference
+
+    score = d_target - alpha * d_diversity
+    """
+
+    d_pos_max = compute_d_pos_max(train_viewpoint_stack, target_cam)
+
+    # --------------------------------------------------
+    # distance from target to all train views
+    # --------------------------------------------------
+    target_distances = []
+
+    for cam in train_viewpoint_stack:
+        d = pose_distance(target_cam.R, target_cam.camera_center,
+                          cam.R, cam.camera_center,
+                          d_pos_max, lam)
+
+        target_distances.append((cam, d))
+
+    target_distances.sort(key=lambda x: x[1])
+
+    first_ref = target_distances[0][0]
+
+    target_distance_dict = {
+        id(cam): d
+        for cam, d in target_distances
+    }
+
+    # --------------------------------------------------
+    # choose second reference
+    # --------------------------------------------------
+    best_score = float("inf")
+    second_ref = None
+
+    for cam in train_viewpoint_stack:
+        if cam is first_ref:
+            continue
+        d_target = target_distance_dict[id(cam)]
+        d_diversity = pose_distance(first_ref.R, first_ref.camera_center,
+                                    cam.R, cam.camera_center,
+                                    d_pos_max, lam)
+        # Prefer:
+        #   - small d_target
+        #   - large d_diversity (if target is close to first_ref -> low d_diversity
+        score = d_target - alpha * d_diversity
+        if score < best_score:
+            best_score = score
+            second_ref = cam
+
+    return first_ref, second_ref
+
+
+def relative_pose(R_art, C_art, R_ref, C_ref):
+    # position of ref in artifact coordinate frame
+    C_rel = R_art.T @ (C_ref - C_art)
     # rotation of near relative to artifact
-    R_rel = R_art.T @ R_near
+    R_rel = R_art.T @ R_ref
     rot6d = np.concatenate([
         R_rel[:, 0],
         R_rel[:, 1]
     ])
     return np.concatenate([C_rel, rot6d])
 
+
 def get_expon_lr_func(
-    lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000
+        lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000
 ):
     """
     Copied from Plenoxels
@@ -110,6 +167,7 @@ def get_expon_lr_func(
 
     return helper
 
+
 def strip_lowerdiag(L):
     uncertainty = torch.zeros((L.shape[0], 6), dtype=torch.float, device="cuda")
 
@@ -121,11 +179,13 @@ def strip_lowerdiag(L):
     uncertainty[:, 5] = L[:, 2, 2]
     return uncertainty
 
+
 def strip_symmetric(sym):
     return strip_lowerdiag(sym)
 
+
 def build_rotation(r):
-    norm = torch.sqrt(r[:,0]*r[:,0] + r[:,1]*r[:,1] + r[:,2]*r[:,2] + r[:,3]*r[:,3])
+    norm = torch.sqrt(r[:, 0] * r[:, 0] + r[:, 1] * r[:, 1] + r[:, 2] * r[:, 2] + r[:, 3] * r[:, 3])
 
     q = r / norm[:, None]
 
@@ -136,30 +196,33 @@ def build_rotation(r):
     y = q[:, 2]
     z = q[:, 3]
 
-    R[:, 0, 0] = 1 - 2 * (y*y + z*z)
-    R[:, 0, 1] = 2 * (x*y - r*z)
-    R[:, 0, 2] = 2 * (x*z + r*y)
-    R[:, 1, 0] = 2 * (x*y + r*z)
-    R[:, 1, 1] = 1 - 2 * (x*x + z*z)
-    R[:, 1, 2] = 2 * (y*z - r*x)
-    R[:, 2, 0] = 2 * (x*z - r*y)
-    R[:, 2, 1] = 2 * (y*z + r*x)
-    R[:, 2, 2] = 1 - 2 * (x*x + y*y)
+    R[:, 0, 0] = 1 - 2 * (y * y + z * z)
+    R[:, 0, 1] = 2 * (x * y - r * z)
+    R[:, 0, 2] = 2 * (x * z + r * y)
+    R[:, 1, 0] = 2 * (x * y + r * z)
+    R[:, 1, 1] = 1 - 2 * (x * x + z * z)
+    R[:, 1, 2] = 2 * (y * z - r * x)
+    R[:, 2, 0] = 2 * (x * z - r * y)
+    R[:, 2, 1] = 2 * (y * z + r * x)
+    R[:, 2, 2] = 1 - 2 * (x * x + y * y)
     return R
+
 
 def build_scaling_rotation(s, r):
     L = torch.zeros((s.shape[0], 3, 3), dtype=torch.float, device="cuda")
     R = build_rotation(r)
 
-    L[:,0,0] = s[:,0]
-    L[:,1,1] = s[:,1]
-    L[:,2,2] = s[:,2]
+    L[:, 0, 0] = s[:, 0]
+    L[:, 1, 1] = s[:, 1]
+    L[:, 2, 2] = s[:, 2]
 
     L = R @ L
     return L
 
+
 def safe_state(silent):
     old_f = sys.stdout
+
     class F:
         def __init__(self, silent):
             self.silent = silent

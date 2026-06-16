@@ -108,6 +108,9 @@ class ModelParams(ParamGroup):
         self.source_path_original = ""
         self.cldm_dataset_path = ""
         self.colmap_cpu = False
+        self.cluster_stride = 0
+        self.cluster_start_pos = 0
+        self.for_cldm = False
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):

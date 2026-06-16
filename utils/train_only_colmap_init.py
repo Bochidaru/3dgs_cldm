@@ -251,7 +251,7 @@ def run_train_only_colmap(
         attempt_report = {
             "name": attempt_name,
             "output_path": _json_path(attempt_sparse_parent),
-            "status": "PENDING",
+            "status": "PENDING"
         }
         try:
             _run_colmap(

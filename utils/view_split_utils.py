@@ -228,11 +228,42 @@ def pose_fps_sample_view_positions(train_pool: Sequence[ViewRecord], k: int) -> 
     return sorted(selected)
 
 
+def cluster_stride_sample_view_positions(train_pool_size: int, k: int, stride: int, start_pos: int) -> List[int]:
+    if k <= 0:
+        raise ValueError("k must be positive")
+    if k > train_pool_size:
+        raise ValueError(f"k={k} > train_pool size={train_pool_size}")
+    if stride <= 0:
+        raise ValueError("stride must be positive")
+    if start_pos < 0 or start_pos >= train_pool_size:
+        raise ValueError(f"start_pos={start_pos} out of range for train_pool_size={train_pool_size}")
+
+    positions = []
+    pos = start_pos
+    for _ in range(k):
+        positions.append(pos)
+        pos += stride
+        if pos >= train_pool_size:
+            # Nếu vượt quá số lượng view thì vòng lại từ đầu
+            pos = pos % train_pool_size
+
+    # đảm bảo không trùng lặp
+    if len(set(positions)) != k:
+        raise RuntimeError(
+            f"cluster_stride produced duplicate positions: positions={positions}, "
+            f"train_pool_size={train_pool_size}, k={k}, stride={stride}, start_pos={start_pos}"
+        )
+
+    return positions
+
+
 def compute_view_split(
     sorted_views: Sequence[ViewRecord],
     hold: int,
     train_views: str,
     sample_mode: str,
+    stride: int = 1,
+    start_pos: int = 0
 ):
     if hold <= 0:
         raise ValueError("split_hold must be > 0")
@@ -250,6 +281,8 @@ def compute_view_split(
             train_pool_positions = evenly_sample_view_positions(len(train_pool), k)
         elif sample_mode == "pose_fps":
             train_pool_positions = pose_fps_sample_view_positions(train_pool, k)
+        elif sample_mode == "cluster_stride":
+            train_pool_positions = cluster_stride_sample_view_positions(len(train_pool), k, stride, start_pos)
         else:
             raise ValueError(f"unknown split_train_sample_mode: {sample_mode}")
         selected_train = [train_pool[p] for p in train_pool_positions]
@@ -264,7 +297,7 @@ def compute_view_split(
     return selected_train, test_views, train_pool, train_pool_positions
 
 
-def compute_sequence_coverage(selected_train: Sequence[ViewRecord], sorted_views: Sequence[ViewRecord]):
+def compute_sequence_coverage(selected_train: Sequence[ViewRecord], sorted_views: Sequence[ViewRecord], for_cldm: bool):
     indices = sorted([int(v.global_index) for v in selected_train])
     span = max(indices) - min(indices) if len(indices) > 1 else 0
     full_span = max(1, len(sorted_views) - 1)
@@ -279,7 +312,9 @@ def compute_sequence_coverage(selected_train: Sequence[ViewRecord], sorted_views
         "median_index_gap": float(np.median(gaps)) if gaps else 0.0,
         "max_index_gap": int(max(gaps)) if gaps else 0,
         "train_views_are_consecutive": bool(all(g == 1 for g in gaps)) if gaps else False,
-        "local_cluster_guard_pass": bool(coverage_ratio >= 0.70) if len(indices) >= 3 else True,
+        "local_cluster_guard_pass": True if for_cldm else (
+            bool(coverage_ratio >= 0.70) if len(indices) >= 3 else True
+        ),
     }
 
 
@@ -298,7 +333,7 @@ def _safe_median(values: Sequence[float]) -> float:
     return float(np.median(values)) if values else 0.0
 
 
-def compute_pose_audit(selected_train: Sequence[ViewRecord], sorted_views: Sequence[ViewRecord]):
+def compute_pose_audit(selected_train: Sequence[ViewRecord], sorted_views: Sequence[ViewRecord], for_cldm: bool):
     full_centers = np.asarray([v.camera_center for v in sorted_views], dtype=np.float64)
     train_centers = np.asarray([v.camera_center for v in selected_train], dtype=np.float64)
     train_bbox = _bbox_diag(train_centers)
@@ -336,7 +371,9 @@ def compute_pose_audit(selected_train: Sequence[ViewRecord], sorted_views: Seque
         "max_train_camera_center_gap": float(max(center_gaps)) if center_gaps else 0.0,
         "mean_view_direction_gap_deg": _safe_mean(direction_gaps),
         "median_view_direction_gap_deg": _safe_median(direction_gaps),
-        "pose_coverage_guard_pass": bool(bbox_ratio >= 0.20) if len(selected_train) >= 3 else True,
+        "pose_coverage_guard_pass": True if for_cldm else (
+            bool(bbox_ratio >= 0.20) if len(selected_train) >= 3 else True
+        ),
     }
 
 
