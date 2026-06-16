@@ -2,23 +2,25 @@ import subprocess
 import yaml
 import os
 
-data_root_path = f"D:/3dgs_improved_data"
+
 
 SPLIT_HOLD = 10000
 STRAT1 = "sparsegs_triangulate"
 STRAT2 = "train_only_mapper"
 split_min_triangulated_points = 50
-split_copy_mode = "symlink"
 cldm_dataset_path = "./cldm_dataset"
-iteration = 1
+iteration = 10000
 test_iteration = 10000
 
 if os.name == "nt":
     iteration = 1
     env = "D:/conda_env/gaussian_splatting/python.exe"
     split_copy_mode = "copy"
+    data_root_path = f"D:/3dgs_improved_data"
 else:
     env = "python"
+    data_root_path = "./"
+    split_copy_mode = "symlink"
 
 with open("dataset_strategy.yaml", "r") as f:
     config = yaml.safe_load(f)
@@ -127,10 +129,8 @@ for dataset_name in config:
             config_args = process_config(scene_config, dataset_name, scene_name, scene_path)
             args.extend(config_args)
 
-id = 0
+
 for sub_run in args:
-    if id == 7:
-        break
     print("================================================================================")
     print("Running:", " ".join(sub_run))
     subprocess.run(sub_run)
