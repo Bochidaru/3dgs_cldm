@@ -194,11 +194,11 @@ nerf_llff_data:
     sparsegs_triangulate:
       split_method: paper_even
       runs:
-        - n_views: 6
+        - n_views: 9
     train_only_mapper:
       split_method: cluster_stride
       runs:
-        - n_views: 4
+        - n_views: 6
           stride: 2
           start_pos: 5
   not_include: []
