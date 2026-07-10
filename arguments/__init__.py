@@ -112,6 +112,9 @@ class ModelParams(ParamGroup):
         self.cluster_start_pos = 0
         self.for_cldm = False
         self.missing_registered = []
+        self.is_cldm_test = False
+        self.cldm_ds_group = ""
+        self.cldm_gt_ratio = ""
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):

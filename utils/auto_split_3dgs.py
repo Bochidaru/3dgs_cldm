@@ -419,7 +419,7 @@ def prepare_auto_split(
     if init_policy is not None:
         split_init_policy = init_policy
 
-    valid_train_views = {"full", "3", "4", "6", "9", "12", "15", "18", "24"}
+    valid_train_views = {"full", "3", "4", "6", "9", "12", "15", "18", "24", "27", "30", "33", "36"}
     valid_copy_modes = {"copy", "hardlink", "symlink"}
     valid_sample_modes = {"paper_even", "pose_fps", "cluster_stride"}
     valid_init_policies = {"sparsegs_triangulate", "subset_colmap", "train_only_mapper", "train_only_colmap"}

@@ -12,7 +12,6 @@ co3d:
         - n_views: 9
           stride: 3
           start_pos: 0
-  split_hold: 1000
   not_include: []
   test: [car2]
   scene:

@@ -967,6 +967,7 @@ def readColmapSceneInfo(
     source_path_original="",
     cldm_dataset_path="",
     missing_registered=None,
+    cldm_gt_ratio="",
 ):
     train_source_path = path
     cam_extrinsics, cam_intrinsics, train_sparse_format = _read_colmap_extrinsics_intrinsics(train_source_path)
@@ -1336,12 +1337,18 @@ def readColmapSceneInfo(
             images_folder=os.path.join(source_path_original, train_reading_dir),
             depths_folder="",
             test_cam_names_list=[],
-            used_in_train=train_cam_name
+            used_in_train=train_cam_name,
         )
         cldm_cam_infos = sorted(
             [c._replace(is_test=False) for c in cldm_cam_infos_unsorted],
             key=lambda c: natural_sort_key(c.image_name),
         )
+
+        if cldm_gt_ratio:
+            if cldm_gt_ratio != "full":
+                num, den = cldm_gt_ratio.split("/")   # num, den ở đây là string
+                n_total = len(cldm_cam_infos)
+                cldm_cam_infos = [cldm_cam_infos[i] for i in range(0, n_total, int(den))]
 
     nerf_normalization = getNerfppNorm(train_cam_infos)
 

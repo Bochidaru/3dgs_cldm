@@ -132,6 +132,24 @@ def relative_pose(R_art, C_art, R_ref, C_ref):
     return np.concatenate([C_rel, rot6d])
 
 
+def relative_pose_batch(R_art, C_art, R_train, C_train):
+    """
+    R_art: (3,3)
+    C_art: (3,)
+    R_train: (N,3,3)
+    C_train: (N,3)
+    """
+    # vị trí của các train cam trong hệ tọa độ artifact
+    C_rel = (R_art.T @ (C_train - C_art).T).T   # (N,3)
+
+    # rotation của train cam so với artifact: R_art.T @ R_train[n]
+    R_rel = R_art.T @ R_train   # (N,3,3)
+
+    rot6d = np.concatenate([R_rel[:, :, 0], R_rel[:, :, 1]], axis=1)  # (N,6)
+
+    return np.concatenate([C_rel, rot6d], axis=1)  # (N,9)
+
+
 def get_expon_lr_func(
         lr_init, lr_final, lr_delay_steps=0, lr_delay_mult=1.0, max_steps=1000000
 ):

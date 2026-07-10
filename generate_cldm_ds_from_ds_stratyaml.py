@@ -10,7 +10,7 @@ STRAT1 = "sparsegs_triangulate"
 STRAT2 = "train_only_mapper"
 split_min_triangulated_points = 20
 cldm_dataset_path = "./cldm_dataset"
-test_iteration = 10000
+test_iteration = 30000
 save_iteration = 30000  # nếu không muốn save gauss .ply thì set cao hơn iteration là được
 
 

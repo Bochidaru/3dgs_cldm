@@ -41,6 +41,10 @@ class Scene:
         self.test_cameras = {}
         self.cldm_cameras = {}
 
+        valid_cldm_gt_ratio = ["1/5", "1/4", "1/3", "1/2", "full"]
+        if args.cldm_gt_ratio:
+            assert args.cldm_gt_ratio in valid_cldm_gt_ratio
+
         if os.path.exists(os.path.join(args.source_path, "sparse")):
             scene_info = sceneLoadTypeCallbacks["Colmap"](
                 args.source_path,
@@ -78,7 +82,8 @@ class Scene:
                 split_only=getattr(args, "split_only", False),
                 source_path_original=getattr(args, "source_path_original", False),
                 cldm_dataset_path=getattr(args, "cldm_dataset_path", False),
-                missing_registered=args.missing_registered
+                missing_registered=args.missing_registered,
+                cldm_gt_ratio=args.cldm_gt_ratio
             )
         elif os.path.exists(os.path.join(args.source_path, "transforms_train.json")):
             print("Found transforms_train.json file, assuming Blender data set!")

@@ -21,7 +21,7 @@ from gaussian_renderer import render, network_gui
 import sys
 from scene import Scene, GaussianModel
 from utils.general_utils import (safe_state, get_expon_lr_func, save_tensor_as_image, find_ref_train_cams,
-                                 relative_pose)
+                                 relative_pose, relative_pose_batch)
 import uuid
 from tqdm import tqdm
 from argparse import ArgumentParser, Namespace
@@ -862,6 +862,8 @@ def training(
     if dataset.cldm_dataset_path:
         import json
         from pathlib import Path
+        import numpy as np
+        import pickle
 
         split_train_view = getattr(args, "split_train_views", False)
 
@@ -878,9 +880,11 @@ def training(
         artifact_dir = os.path.join(dataset.cldm_dataset_path, "artifact_image", dataset_name, scene_tag)
         gt_dir = os.path.join(dataset.cldm_dataset_path, "gt_image", dataset_name, scene_tag)
         ref_dir = os.path.join(dataset.cldm_dataset_path, "ref_image", dataset_name, scene_tag)
+        trained_dir = os.path.join(dataset.cldm_dataset_path, "trained_image", dataset_name, scene_tag)
         os.makedirs(artifact_dir, exist_ok=True)
         os.makedirs(gt_dir, exist_ok=True)
         os.makedirs(ref_dir, exist_ok=True)
+        os.makedirs(trained_dir, exist_ok=True)
 
         jsonl_path = os.path.join(dataset.cldm_dataset_path, "dataset.jsonl")
         bg = torch.rand((3), device="cuda") if opt.random_background else background
@@ -890,6 +894,15 @@ def training(
 
         for v in train_viewpoint_stack:
             v.camera_center = v.camera_center.cpu().numpy()
+            base_image_name = Path(v.image_name).stem
+            trained_image_path = os.path.join(str(trained_dir), f"{base_image_name}.png")
+            save_tensor_as_image(v.original_image, trained_image_path)
+
+        R_train = np.stack([v.R for v in train_viewpoint_stack])  # (N,3,3)
+        C_train = np.stack([v.camera_center for v in train_viewpoint_stack])  # (N,3)
+        train_cam_names = [f"{Path(v.image_name).stem}.png" for v in train_viewpoint_stack]
+
+        records = []
 
         for cldm_cam in cldm_viewpoint_stack:
             # Render Pseudo View (Artifact View)
@@ -906,53 +919,43 @@ def training(
             save_tensor_as_image(artifact_image, artifact_image_path)
             save_tensor_as_image(gt_image, gt_image_path)
 
-            # Find resolution
-            C, H, W = artifact_image.shape
-            resolution = [H, W]
-
             artifact_rel_path = Path(os.path.relpath(artifact_image_path, dataset.cldm_dataset_path)).as_posix()
             gt_rel_path = Path(os.path.relpath(gt_image_path, dataset.cldm_dataset_path)).as_posix()
 
             # Find 2 reference train image to current cldm cam (cldm cam == pseudo view == artifact view)
             cldm_cam.camera_center = cldm_cam.camera_center.cpu().numpy()
             ref1, ref2 = find_ref_train_cams(train_viewpoint_stack, cldm_cam)
-            ref_sub_dir = os.path.join(str(ref_dir), base_image_name)
-            os.makedirs(ref_sub_dir, exist_ok=True)
-            base_image_name_ref1, base_image_name_ref2 = Path(ref1.image_name).stem, Path(ref2.image_name).stem
-            ref1_image_path = os.path.join(ref_sub_dir, f"ref1_{base_image_name_ref1}.png")
-            ref2_image_path = os.path.join(ref_sub_dir, f"ref2_{base_image_name_ref2}.png")
-
-            save_tensor_as_image(ref1.original_image, ref1_image_path)
-            save_tensor_as_image(ref2.original_image, ref2_image_path)
 
             # Get relative pose vector of ref to current cldm cam (3 C rel + 6 rot6d rel)
-            ref1_rel_pose = relative_pose(cldm_cam.R, cldm_cam.camera_center, ref1.R, ref1.camera_center)
-            ref2_rel_pose = relative_pose(cldm_cam.R, cldm_cam.camera_center, ref2.R, ref2.camera_center)
-
-            ref1_rel_path = Path(os.path.relpath(ref1_image_path, dataset.cldm_dataset_path)).as_posix()
-            ref2_rel_path = Path(os.path.relpath(ref2_image_path, dataset.cldm_dataset_path)).as_posix()
+            ref_rel_pose = relative_pose_batch(cldm_cam.R, cldm_cam.camera_center, R_train, C_train)
+            ref_rel_pose_dict = {
+                name: pose for name, pose in zip(train_cam_names, ref_rel_pose)
+            }
+            ref_bank_path = os.path.join(str(ref_dir), f"{base_image_name}.pkl")
+            ref_bank_path_posix = Path(os.path.relpath(ref_bank_path, dataset.cldm_dataset_path)).as_posix()
 
             record = {
+                "group": dataset.cldm_ds_group,
+                "dataset": dataset_name,
                 "scene_tag": scene_tag,
-                "resolution": resolution,
                 "source": artifact_rel_path,
                 "target": gt_rel_path,
+                "image_name": f"{base_image_name}.png",
                 "ref": {
-                    "ref1": {
-                        "path": ref1_rel_path,
-                        "pose_rel": ref1_rel_pose.tolist()
-                    },
-                    "ref2": {
-                        "path": ref2_rel_path,
-                        "pose_rel": ref2_rel_pose.tolist()
-                    }
+                    "ref1_name": f"{Path(ref1.image_name).stem}.png",
+                    "ref2_name": f"{Path(ref2.image_name).stem}.png",
+                    "ref_bank_path": ref_bank_path_posix,
                 },
                 "prompt": "",
-                "is_test": True if "_test_" in str(original_scene_path).lower() else False
+                "is_test": dataset.is_cldm_test
             }
-
-            # Append vào file JSONL
-            with open(jsonl_path, "a", encoding="utf-8") as f:
+            records.append(record)
+            # từng cldm sẽ tương ứng 1 file pkl
+            with open(ref_bank_path, "wb") as f:
+                pickle.dump(ref_rel_pose_dict, f)
+        # Append vào file JSONL
+        with open(jsonl_path, "a", encoding="utf-8") as f:
+            for record in records:
                 f.write(json.dumps(record) + "\n")
 
     print("\nCreate CLDM dataset complete!")
