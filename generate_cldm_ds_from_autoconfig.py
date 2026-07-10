@@ -9,6 +9,7 @@ import time
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 from cldm_dataset_sampling_strategy import GROUP_MAPPING, RULES, TEST_SPLIT
+sys.stdout.reconfigure(line_buffering=True)
 
 
 STATUS = {0: "PENDING", 1: "RUNNING", 2: "COMPLETED", 3: "FAILED"}
@@ -135,6 +136,9 @@ def build_runtime_config(root, old_runtime_config: dict):
     datasets = sorted(os.listdir(root))
 
     for dataset_name in datasets:
+        if dataset_name not in GROUP_MAPPING:
+            print(f"[SKIP] {dataset_name} not found in GROUP_MAPPING")
+            continue
 
         runtime_config[dataset_name] = {}
 
