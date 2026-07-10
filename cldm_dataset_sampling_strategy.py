@@ -136,7 +136,7 @@ RULES = {
         {
             "image_count_min": 0,
             "image_count_max": 999999,
-            "cldm_gt_ratio": "1/2",
+            "cldm_gt_ratio": "1/3",
 
             "sparsegs_triangulate": [
                 {
@@ -156,7 +156,7 @@ RULES = {
         {
             "image_count_min": 0,
             "image_count_max": 299,
-            "cldm_gt_ratio": "1/2",
+            "cldm_gt_ratio": "1/3",
 
             "sparsegs_triangulate": [
 
@@ -235,7 +235,7 @@ RULES = {
 
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [30, 33, 36],
+                    "candidate_views": [30, 33],
                 },
             ],
 
