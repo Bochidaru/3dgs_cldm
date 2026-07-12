@@ -318,7 +318,7 @@ if __name__ == "__main__":
                 output_p = f"./output/{dataset_n}/{scene_n}_{split_train_sample_mode}_{split_train_view}views"
                 print("================================================================================")
                 print(f"[{run_idx}/{total_run}] Running: {dataset_n}/{scene_n}/{split_train_sample_mode}/{split_train_view}views")
-                if run["status"] == STATUS[2]:
+                if run["status"] in [STATUS[2], STATUS[3]]:
                     print(f"This has already been completed!")
                     continue
                 update_config(runtime_config, dataset_n, scene_n, STRAT1, candidate_id, STATUS[1])  # RUNNING
@@ -339,7 +339,7 @@ if __name__ == "__main__":
                 output_p = f"./output/{dataset_n}/{scene_n}_{split_train_sample_mode}_{split_train_view}views"
                 print("================================================================================")
                 print(f"[{run_idx}/{total_run}] Running: {dataset_n}/{scene_n}/{split_train_sample_mode}/{split_train_view}views/{stride}stride")
-                if run["status"] == STATUS[2]:
+                if run["status"] in [STATUS[2], STATUS[3]]:
                     print(f"This has already been completed!")
                     continue
                 update_config(runtime_config, dataset_n, scene_n, STRAT2, candidate_id, STATUS[1])  # RUNNING
