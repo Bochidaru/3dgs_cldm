@@ -17,7 +17,7 @@ STATUS = {0: "PENDING", 1: "RUNNING", 2: "COMPLETED", 3: "FAILED"}
 
 root = r"D:\3dgs_improved_data\3dgs_dataset"
 config_name = "runtime_config.yaml"
-limit_try = 3
+limit_try = 5
 SPLIT_HOLD = 10000
 STRAT1 = "sparsegs_triangulate"
 STRAT2 = "train_only_mapper"
@@ -136,29 +136,23 @@ def build_runtime_config(root, old_runtime_config: dict):
     datasets = sorted(os.listdir(root))
 
     for dataset_name in datasets:
-        if dataset_name not in GROUP_MAPPING:
-            print(f"[SKIP] {dataset_name} not found in GROUP_MAPPING")
-            continue
-
-        runtime_config[dataset_name] = {}
-
-        dataset_path = os.path.join(
-            root,
-            dataset_name
-        )
+        dataset_path = os.path.join(root, dataset_name)
 
         if os.path.isdir(dataset_path):
+            if dataset_name not in GROUP_MAPPING:
+                print(f"[SKIP] {dataset_name} not found in GROUP_MAPPING")
+                continue
+
             if (old_runtime_config is not None and dataset_name in old_runtime_config):
                 runtime_config[dataset_name] = old_runtime_config[dataset_name]
             
             else:
+                runtime_config[dataset_name] = {}
                 for scene_name in sorted(os.listdir(dataset_path)):
-
                     scene_path = os.path.join(
                         dataset_path,
                         scene_name
                     )
-
                     image_count = count_images(scene_path)
                     runtime_config[dataset_name][scene_name] = build_scene_config(dataset_name, scene_name, image_count)
 
@@ -223,7 +217,7 @@ def run_sparsegs_until_success(base_arg, split_train_view):
 
 def run_trainonly_until_success(base_arg, stride):
     status = None
-    for _ in range(limit_try):
+    for i in range(limit_try):
         try:
             arg = base_arg.copy()
             arg[arg.index("--cluster_stride")+1] = str(stride)
@@ -233,7 +227,8 @@ def run_trainonly_until_success(base_arg, stride):
 
         except subprocess.CalledProcessError as e:
             print(f"Error with stride = {stride}, retry with -1 stride")
-            stride -= 1
+            if i < 3:
+                stride -= 1
             status = STATUS[3]
 
     return status, stride
