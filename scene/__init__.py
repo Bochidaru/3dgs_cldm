@@ -41,7 +41,7 @@ class Scene:
         self.test_cameras = {}
         self.cldm_cameras = {}
 
-        valid_cldm_gt_ratio = ["1/7", "1/6", "1/5", "1/4", "1/3", "1/2", "full"]
+        valid_cldm_gt_ratio = ["1/10","1/9","1/8", "1/7", "1/6", "1/5", "1/4", "1/3", "1/2", "full"]
         if args.cldm_gt_ratio:
             assert args.cldm_gt_ratio in valid_cldm_gt_ratio
 
