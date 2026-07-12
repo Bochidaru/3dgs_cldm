@@ -230,7 +230,7 @@ def run_trainonly_until_success(base_arg, split_train_view, stride):
             if i < 3:
                 print(f"Error with n_views = {split_train_view}, stride = {stride}, retry with -1 stride")
                 stride -= 1
-            else:
+            if i > 2:
                 print(f"Error with n_views = {split_train_view}, stride = {stride}, retry with +3 views")
                 split_train_view += 3
             status = STATUS[3]
