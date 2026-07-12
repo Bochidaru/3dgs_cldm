@@ -343,9 +343,9 @@ if __name__ == "__main__":
                     continue
                 update_config(runtime_config, dataset_n, scene_n, STRAT2, candidate_id, STATUS[1])  # RUNNING
                 start_time = time.time()
-                new_status, new_stride = run_3dgs(False, scene_p, output_p, isTest, cldm_gt_ratio,
+                new_status, new_nviews, new_stride = run_3dgs(False, scene_p, output_p, isTest, cldm_gt_ratio,
                                                   group, split_train_sample_mode, split_train_view, stride, start_pos)
                 end_time = time.time()
-                update_config(runtime_config, dataset_n, scene_n, STRAT2, candidate_id, new_status, new_stride=new_stride)
+                update_config(runtime_config, dataset_n, scene_n, STRAT2, candidate_id, new_status, new_nviews=new_nviews, new_stride=new_stride)
                 print(f"⏱ Ran in: {end_time - start_time:.2f} second")
                 print("================================================================================")
