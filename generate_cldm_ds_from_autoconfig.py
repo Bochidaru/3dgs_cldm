@@ -148,22 +148,18 @@ def build_runtime_config(root, old_runtime_config: dict):
         )
 
         if os.path.isdir(dataset_path):
+            if (old_runtime_config is not None and dataset_name in old_runtime_config):
+                runtime_config[dataset_name] = old_runtime_config[dataset_name]
+            
+            else:
+                for scene_name in sorted(os.listdir(dataset_path)):
 
-            for scene_name in sorted(os.listdir(dataset_path)):
+                    scene_path = os.path.join(
+                        dataset_path,
+                        scene_name
+                    )
 
-                scene_path = os.path.join(
-                    dataset_path,
-                    scene_name
-                )
-
-                image_count = count_images(scene_path)
-
-                if (old_runtime_config is not None
-                        and dataset_name in old_runtime_config
-                        and scene_name in old_runtime_config[dataset_name]
-                ):
-                    runtime_config[dataset_name][scene_name] = old_runtime_config[dataset_name][scene_name]
-                else:
+                    image_count = count_images(scene_path)
                     runtime_config[dataset_name][scene_name] = build_scene_config(dataset_name, scene_name, image_count)
 
     return runtime_config

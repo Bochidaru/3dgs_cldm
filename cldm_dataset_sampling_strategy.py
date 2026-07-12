@@ -135,14 +135,41 @@ RULES = {
 
         {
             "image_count_min": 0,
-            "image_count_max": 999999,
-            "cldm_gt_ratio": "1/3",
+            "image_count_max": 399,
+            "cldm_gt_ratio": "1/5",
 
             "sparsegs_triangulate": [
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [15, 18, 24, 27],
+                    "candidate_views": [12, 15, 18, 24, 27],
                 }
+            ],
+            "train_only_mapper": [
+                {
+                    "split_method": "cluster_stride",
+                    "candidate_views": [12, 15],
+                    "candidate_strides": [4, 3, 2, 1],
+                },
+            ],
+
+        },
+        {
+            "image_count_min": 400,
+            "image_count_max": 999999,
+            "cldm_gt_ratio": "1/6",
+
+            "sparsegs_triangulate": [
+                {
+                    "split_method": "paper_even",
+                    "candidate_views": [12, 15, 18, 24, 27],
+                }
+            ],
+            "train_only_mapper": [
+                {
+                    "split_method": "cluster_stride",
+                    "candidate_views": [15, 18],
+                    "candidate_strides": [4, 3, 2, 1],
+                },
             ],
         },
     ],
