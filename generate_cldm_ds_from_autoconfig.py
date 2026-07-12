@@ -215,23 +215,27 @@ def run_sparsegs_until_success(base_arg, split_train_view):
 
     return status, split_train_view
 
-def run_trainonly_until_success(base_arg, stride):
+def run_trainonly_until_success(base_arg, split_train_view, stride):
     status = None
     for i in range(limit_try):
         try:
             arg = base_arg.copy()
             arg[arg.index("--cluster_stride")+1] = str(stride)
+            arg[arg.index("--split_train_views")+1] = str(split_train_view)
             subprocess.run(arg, check=True)
             status = STATUS[2]
             break
 
         except subprocess.CalledProcessError as e:
-            print(f"Error with stride = {stride}, retry with -1 stride")
             if i < 3:
+                print(f"Error with n_views = {split_train_view}, stride = {stride}, retry with -1 stride")
                 stride -= 1
+            else:
+                print(f"Error with n_views = {split_train_view}, stride = {stride}, retry with +3 views")
+                split_train_view += 3
             status = STATUS[3]
 
-    return status, stride
+    return status, split_train_view, stride
 
 
 def run_3dgs(is_sparsegs_triangulate, scene_path, output_path, isTest, cldm_gt_ratio, group,
@@ -278,10 +282,10 @@ def run_3dgs(is_sparsegs_triangulate, scene_path, output_path, isTest, cldm_gt_r
 
     if is_sparsegs_triangulate:
         status, new_nviews = run_sparsegs_until_success(base_arg, split_train_view)
-        return status, new_nviews
+        return status, new_nviews, None
     else:
-        status, new_stride = run_trainonly_until_success(base_arg, stride)
-        return status, new_stride
+        status, new_nviews, new_stride = run_trainonly_until_success(base_arg, split_train_view, stride)
+        return status, new_nviews, new_stride
 
 
 if __name__ == "__main__":
@@ -318,7 +322,7 @@ if __name__ == "__main__":
                     continue
                 update_config(runtime_config, dataset_n, scene_n, STRAT1, candidate_id, STATUS[1])  # RUNNING
                 start_time = time.time()
-                new_status, new_nviews = run_3dgs(True, scene_p, output_p, isTest, cldm_gt_ratio,
+                new_status, new_nviews, _ = run_3dgs(True, scene_p, output_p, isTest, cldm_gt_ratio,
                                                   group, split_train_sample_mode, split_train_view)
                 end_time = time.time()
                 update_config(runtime_config, dataset_n, scene_n, STRAT1, candidate_id, new_status, new_nviews=new_nviews)
