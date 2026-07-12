@@ -21,8 +21,7 @@ GROUP_MAPPING = {
     "TanksAndTemples": "CO",
 
     # Large Scene
-    "DL3DV": "LS",
-    "ScanNet++": "LS",
+    "dl3dv": "LS",
 }
 
 
@@ -141,7 +140,7 @@ RULES = {
             "sparsegs_triangulate": [
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [12, 15, 18, 24, 27],
+                    "candidate_views": [9, 12, 15, 18, 24, 27],
                 }
             ],
             "train_only_mapper": [
@@ -161,13 +160,13 @@ RULES = {
             "sparsegs_triangulate": [
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [12, 15, 18, 24, 27],
+                    "candidate_views": [9, 12, 15, 18, 24, 27],
                 }
             ],
             "train_only_mapper": [
                 {
                     "split_method": "cluster_stride",
-                    "candidate_views": [15, 18],
+                    "candidate_views": [12, 15, 18],
                     "candidate_strides": [4, 3, 2, 1],
                 },
             ],
