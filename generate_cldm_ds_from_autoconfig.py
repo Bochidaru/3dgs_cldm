@@ -35,7 +35,7 @@ if os.name == "nt":
 else:
     iteration = 10000
     env = "python"
-    data_root_path = "./3dgs_dataset"
+    root = "./3dgs_dataset"
     split_copy_mode = "symlink"
 
 
