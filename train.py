@@ -26,6 +26,7 @@ import uuid
 from tqdm import tqdm
 from argparse import ArgumentParser, Namespace
 from arguments import ModelParams, PipelineParams, OptimizationParams
+from filelock import FileLock
 try:
     from torch.utils.tensorboard import SummaryWriter
     TENSORBOARD_FOUND = True
@@ -953,10 +954,35 @@ def training(
             # từng cldm sẽ tương ứng 1 file pkl
             with open(ref_bank_path, "wb") as f:
                 pickle.dump(ref_rel_pose_dict, f)
-        # Append vào file JSONL
-        with open(jsonl_path, "a", encoding="utf-8") as f:
-            for record in records:
-                f.write(json.dumps(record) + "\n")
+        # Append vào file JSONL - xoá các record cũ cùng scene_tag trước khi ghi,
+        # để rerun/resume 1 job không bị tích luỹ record trùng lặp.
+        def _load_lines_excluding_scene_tag(path, scene_tag_to_drop):
+            if not os.path.exists(path):
+                return []
+            kept = []
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.rstrip("\n")
+                    if not line:
+                        continue
+                    try:
+                        rec = json.loads(line)
+                    except json.JSONDecodeError:
+                        # dòng lỗi định dạng: giữ nguyên, tránh xoá nhầm dữ liệu khác
+                        kept.append(line)
+                        continue
+                    if rec.get("scene_tag") != scene_tag_to_drop:
+                        kept.append(line)
+            return kept
+
+        lock = FileLock(jsonl_path + ".lock")
+        with lock:
+            kept_lines = _load_lines_excluding_scene_tag(jsonl_path, scene_tag)
+            with open(jsonl_path, "w", encoding="utf-8") as f:
+                for line in kept_lines:
+                    f.write(line + "\n")
+                for record in records:
+                    f.write(json.dumps(record) + "\n")
 
     print("\nCreate CLDM dataset complete!")
 

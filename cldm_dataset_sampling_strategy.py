@@ -11,6 +11,7 @@ GROUP_MAPPING = {
     "DTU": "PO",
     "nerf_llff_data": "PO",
     "ThaiDuong": "PO",
+    "omni": "PO",
 
     # Full Object
     "co3d": "FO",
@@ -19,6 +20,7 @@ GROUP_MAPPING = {
     # Complex Object
     "mipnerf360": "CO",
     "TanksAndTemples": "CO",
+    "wildrgb": "CO",
 
     # Large Scene
     "dl3dv": "LS",
@@ -86,12 +88,12 @@ RULES = {
         {
             "image_count_min": 0,
             "image_count_max": 999999,
-            "cldm_gt_ratio": "1/2",
+            "cldm_gt_ratio": "1/4",
 
             "sparsegs_triangulate": [
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [6, 9, 12],
+                    "candidate_views": [9, 12, 15, 18, 21, 24, 27, 30],
                 }
             ],
 
@@ -112,14 +114,14 @@ RULES = {
             "sparsegs_triangulate": [
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [9, 12, 15, 18],
+                    "candidate_views": [12, 15, 18, 21, 24, 27, 30],
                 }
             ],
 
             "train_only_mapper": [
                 {
                     "split_method": "cluster_stride",
-                    "candidate_views": [12, 15],
+                    "candidate_views": [12, 15, 18, 21, 24, 27],
                     "candidate_strides": [4, 3, 2, 1],
                 }
             ]
@@ -181,19 +183,14 @@ RULES = {
 
         {
             "image_count_min": 0,
-            "image_count_max": 299,
+            "image_count_max": 200,
             "cldm_gt_ratio": "1/3",
 
             "sparsegs_triangulate": [
 
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [12, 15],
-                },
-
-                {
-                    "split_method": "paper_even",
-                    "candidate_views": [18, 24],
+                    "candidate_views": [12, 15, 18, 21, 24, 27, 30, 33],
                 },
             ],
 
@@ -201,67 +198,22 @@ RULES = {
 
                 {
                     "split_method": "cluster_stride",
-                    "candidate_views": [12, 15],
-                    "candidate_strides": [4, 3, 2, 1],
-                },
-
-                {
-                    "split_method": "cluster_stride",
-                    "candidate_views": [18, 24],
+                    "candidate_views": [12, 15, 18, 21, 24],
                     "candidate_strides": [4, 3, 2, 1],
                 },
             ]
         },
 
         {
-            "image_count_min": 300,
-            "image_count_max": 399,
-            "cldm_gt_ratio": "1/3",
-
-            "sparsegs_triangulate": [
-
-                {
-                    "split_method": "pose_fps",
-                    "candidate_views": [15, 18],
-                },
-
-                {
-                    "split_method": "paper_even",
-                    "candidate_views": [24, 27],
-                },
-            ],
-
-            "train_only_mapper": [
-
-                {
-                    "split_method": "cluster_stride",
-                    "candidate_views": [18],
-                    "candidate_strides": [4, 3, 2, 1],
-                },
-
-                {
-                    "split_method": "cluster_stride",
-                    "candidate_views": [27],
-                    "candidate_strides": [4, 3, 2, 1],
-                },
-            ]
-        },
-
-        {
-            "image_count_min": 400,
+            "image_count_min": 201,
             "image_count_max": 999999,
-            "cldm_gt_ratio": "1/3",
+            "cldm_gt_ratio": "1/4",
 
             "sparsegs_triangulate": [
 
                 {
-                    "split_method": "pose_fps",
-                    "candidate_views": [18, 21],
-                },
-
-                {
                     "split_method": "paper_even",
-                    "candidate_views": [30, 33],
+                    "candidate_views": [12, 15, 18, 21, 24, 27, 30, 33, 36],
                 },
             ],
 
@@ -269,17 +221,10 @@ RULES = {
 
                 {
                     "split_method": "cluster_stride",
-                    "candidate_views": [21],
-                    "candidate_strides": [4, 3, 2, 1],
-                },
-
-                {
-                    "split_method": "cluster_stride",
-                    "candidate_views": [30],
+                    "candidate_views": [15, 18, 21, 24, 27],
                     "candidate_strides": [4, 3, 2, 1],
                 },
             ]
         },
-
     ]
 }
