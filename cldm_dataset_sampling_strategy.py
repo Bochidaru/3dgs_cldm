@@ -21,6 +21,7 @@ GROUP_MAPPING = {
     "mipnerf360": "CO",
     "TanksAndTemples": "CO",
     "wildrgb": "CO",
+    "NAVI": "CO",
 
     # Large Scene
     "dl3dv": "LS",
@@ -88,12 +89,12 @@ RULES = {
         {
             "image_count_min": 0,
             "image_count_max": 999999,
-            "cldm_gt_ratio": "1/4",
+            "cldm_gt_ratio": "1/3",
 
             "sparsegs_triangulate": [
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [9, 12, 15, 18, 21, 24, 27, 30],
+                    "candidate_views": [3, 6, 9, 12, 15, 18, 21, 24, 27, 30],
                 }
             ],
 
@@ -213,7 +214,7 @@ RULES = {
 
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [12, 15, 18, 21, 24, 27, 30, 33, 36],
+                    "candidate_views": [18, 21, 24, 27, 30, 33, 36],
                 },
             ],
 
