@@ -20,8 +20,8 @@ GROUP_MAPPING = {
     # Complex Object
     "mipnerf360": "CO",
     "TanksAndTemples": "CO",
-    "wildrgb": "CO",
     "NAVI": "CO",
+    "objectron": "CO",
 
     # Large Scene
     "dl3dv": "LS",
@@ -214,7 +214,7 @@ RULES = {
 
                 {
                     "split_method": "paper_even",
-                    "candidate_views": [18, 21, 24, 27, 30, 33, 36],
+                    "candidate_views": [15, 18, 21, 24, 27, 30, 33, 36],
                 },
             ],
 
