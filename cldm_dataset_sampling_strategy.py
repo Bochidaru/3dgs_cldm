@@ -21,7 +21,7 @@ GROUP_MAPPING = {
     "mipnerf360": "CO",
     "TanksAndTemples": "CO",
     "NAVI": "CO",
-    "objectron": "CO",
+    "mobilebrick": "CO",
 
     # Large Scene
     "dl3dv": "LS",
@@ -181,11 +181,33 @@ RULES = {
     # ========================================================
 
     "CO": [ 
-
         {
             "image_count_min": 0,
-            "image_count_max": 200,
-            "cldm_gt_ratio": "1/3",
+            "image_count_max": 100,
+            "cldm_gt_ratio": "full",
+
+            "sparsegs_triangulate": [
+
+                {
+                    "split_method": "paper_even",
+                    "candidate_views": [12, 15, 18, 21, 24,],
+                },
+            ],
+
+            "train_only_mapper": [
+
+                {
+                    "split_method": "cluster_stride",
+                    "candidate_views": [12, 15, 18, 21],
+                    "candidate_strides": [4, 3, 2, 1],
+                },
+            ]
+        },
+
+        {
+            "image_count_min": 101,
+            "image_count_max": 199,
+            "cldm_gt_ratio": "1/2",
 
             "sparsegs_triangulate": [
 
